@@ -7,6 +7,18 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 
+/**
+ * @OA\Swagger(
+ *   schemes={"http"},
+ *   host="localhost:8000",
+ *   basePath="/",
+ *   @OA\Info(
+ *     title="Shopping cart API",
+ *     version="1.0.0"
+ *   )
+ * )
+ */
+
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
