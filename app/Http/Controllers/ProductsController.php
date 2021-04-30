@@ -12,6 +12,7 @@ class ProductsController extends Controller
      *     path="/products",
      *     summary="Get list of products",
      *     tags={"Products"},
+     *     security={{"passport": {}}},
      *     @OA\Response(
      *          response=200,
      *          description="Success",
@@ -42,9 +43,11 @@ class ProductsController extends Controller
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="errors",
-     *                  type="string"
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
      *              ),
-     *          ),
+     *         ),
      *      )
      * )
      */
@@ -66,17 +69,20 @@ class ProductsController extends Controller
      *      path="/products",
      *      summary="Add a new product",
      *      tags={"Products"},
-     *      @OA\RequestBody(
+     *      @OA\Parameter(
+     *          name="product_name",
+     *          in="query",
      *          required=true,
-     *          @OA\JsonContent(
-     *              @OA\Property(
-     *                  property="product_name",
-     *                  type="string"
-     *              ),
-     *              @OA\Property(
-     *                  property="product_price",
-     *                  type="number"
-     *              )
+     *          @OA\Schema(
+     *              type="string"
+     *          )
+     *      ),
+     *      @OA\Parameter(
+     *          name="product_price",
+     *          in="query",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="number"
      *          )
      *      ),
      *     @OA\Response(
@@ -95,9 +101,11 @@ class ProductsController extends Controller
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="errors",
-     *                  type="string"
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
      *              ),
-     *          ),
+     *         ),
      *     ),
      *     @OA\Response(
      *          response="500",
@@ -164,9 +172,11 @@ class ProductsController extends Controller
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="errors",
-     *                  type="string"
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
      *              ),
-     *          ),
+     *         ),
      *      )
      * )
      */
@@ -179,7 +189,7 @@ class ProductsController extends Controller
     /**
      * @OA\Put(
      *      path="/products/{id}",
-     *      summary="Get info about a product",
+     *      summary="Update info of a product",
      *      tags={"Products"},
      *      @OA\Parameter(
      *          name="id",
@@ -190,20 +200,23 @@ class ProductsController extends Controller
      *              type="integer"
      *          )
      *      ),
-     *      @OA\RequestBody(
+     *      @OA\Parameter(
+     *          name="product_name",
+     *          in="query",
      *          required=true,
-     *          @OA\JsonContent(
-     *              @OA\Property(
-     *                  property="product_name",
-     *                  type="string"
-     *              ),
-     *              @OA\Property(
-     *                  property="product_price",
-     *                  type="number"
-     *              )
+     *          @OA\Schema(
+     *              type="string"
      *          )
      *      ),
-     *     @OA\Response(
+     *      @OA\Parameter(
+     *          name="product_price",
+     *          in="query",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="number"
+     *          )
+     *      ),
+     *      @OA\Response(
      *          response=200,
      *          description="Success",
      *          @OA\JsonContent(
@@ -219,13 +232,15 @@ class ProductsController extends Controller
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="errors",
-     *                  type="string"
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
      *              ),
      *         ),
      *     ),
      *     @OA\Response(
-     *          response="500",
-     *          description="Something went wrong",
+     *          response="404",
+     *          description="Product doesn't exist",
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="response",
@@ -241,14 +256,14 @@ class ProductsController extends Controller
         if (self::updateProduct(['id' => $request['id'], 'name' => $request->get('product_name'), 'price' => $request->get('product_price')])) {
             return response()->json(["response" => "Successfully updated in the store"], 200);
         } else {
-            return response()->json(["response" => "Something went wrong while update the product in the store"], 500);
+            return response()->json(["response" => "The product you want to update doesn't exist"], 404);
         }
     }
 
     /**
      * @OA\Delete(
      *      path="/products/{id}",
-     *      summary="Get info about a product",
+     *      summary="Remove a product",
      *      tags={"Products"},
      *      @OA\Parameter(
      *          name="id",
@@ -275,13 +290,15 @@ class ProductsController extends Controller
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="errors",
-     *                  type="string"
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
      *              ),
      *         ),
      *     ),
      *     @OA\Response(
-     *          response="500",
-     *          description="Something went wrong",
+     *          response="404",
+     *          description="Product doesn't exist",
      *          @OA\JsonContent(
      *              @OA\Property(
      *                  property="response",
@@ -297,7 +314,7 @@ class ProductsController extends Controller
         if (Redis::connection()->del("product:{$request['id']}")) {
             return response()->json(["response" => "Successfully removed from the store"], 200);
         } else {
-            return response()->json(["response" => "Something went wrong while removing the product from the store"], 500);
+            return response()->json(["response" => "The product doesn't exist"], 404);
         }
     }
 
@@ -315,8 +332,11 @@ class ProductsController extends Controller
 
     private static function updateProduct($data) : bool
     {
-        Redis::connection()->del("product:{$data['id']}");
-        return Redis::connection()->hMSet("product:{$data['id']}", $data);
+        if (Redis::connection()->del("product:{$data['id']}")) {
+            return Redis::connection()->hMSet("product:{$data['id']}", $data);
+        } else {
+            return false;
+        }
     }
 
 }

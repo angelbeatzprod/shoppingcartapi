@@ -15,7 +15,13 @@ use Illuminate\Routing\Controller as BaseController;
  *   @OA\Info(
  *     title="Shopping cart API",
  *     version="1.0.0"
- *   )
+ *   ),
+ *      @OA\SecurityScheme(
+ *          securityDefinition="passport",
+ *          type="oauth2",
+ *          in="header",
+ *          name="Authorization"
+ *      ),
  * )
  */
 

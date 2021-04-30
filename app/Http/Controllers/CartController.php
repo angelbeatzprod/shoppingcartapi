@@ -9,39 +9,150 @@ use App\Models\User;
 
 class CartController extends Controller
 {
+    /**
+     * @OA\Get(
+     *      path="/cart/user/{user_id}",
+     *      summary="Get list of products in the cart",
+     *      tags={"Cart"},
+     *      @OA\Parameter(
+     *          name="user_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Success",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="array",
+     *                  @OA\Items(
+     *                      @OA\Property(
+     *                          property="item_id",
+     *                          type="integer"
+     *                      ),
+     *                      @OA\Property(
+     *                          property="user_id",
+     *                          type="integer"
+     *                      ),
+     *                      @OA\Property(
+     *                          property="prod_id",
+     *                          type="integer"
+     *                      )
+     *                  )
+     *              )
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response="401",
+     *          description="Unauthorized user",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
+     *              ),
+     *         ),
+     *      )
+     * )
+     */
+
     public function index(Request $request)
-    {
-        Log::info("USER_ID " . $request['user_id']);
-        Log::info("QUERY " . User::where('id', '=', $request['user_id'])->get());
-        
+    {        
         $response = [];
 
         foreach (Redis::connection()->keys("cart:{$request['user_id']}:items:*") as $key) {
-            // return response()->json(["response" => $key], 200);
             $explodedKey = explode("_", $key);
             $response[] = Redis::connection()->hGetAll(end($explodedKey));
         }
 
         return response()->json(["response" => $response], 200);
-        // return response()->json(["response" => Redis::connection()->keys("cart:1:items:*")], 200);
     }
 
-    public function store(Request $request)
-    {        
-        // return response()->json(["response" => User::where('id', '=', $request['user_id'])->get()->isEmpty()], 500);
-        Log::info("USER_ID " . $request['user_id']);
-        Log::info("QUERY " . User::where('id', '=', $request['user_id'])->get());
+    /**
+     * @OA\Post(
+     *      path="/cart/user/{user_id}",
+     *      summary="Add a new product to the cart",
+     *      tags={"Cart"},
+     *      @OA\Parameter(
+     *          name="user_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Parameter(
+     *          name="prod_id",
+     *          in="query",
+     *          required=true,
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Success",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="string"
+     *              )
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response="401",
+     *          description="Unauthorized user",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
+     *              ),
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *          response="404",
+     *          description="Product or user doesn't exist",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="string"
+     *              ),
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *          response="500",
+     *          description="Something went wrong",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="string"
+     *              ),
+     *          ),
+     *      )
+     * )
+     */
 
+    public function store(Request $request)
+    {
         if (! Redis::connection()->exists("product:{$request->get('prod_id')}")) {
-            return response()->json(["response" => "The product you want to add doesn't exist"], 500);
-        } 
+            return response()->json(["response" => "The product you want to add doesn't exist"], 404);
+        }
         
         if (User::where('id', '=', $request['user_id'])->get()->isEmpty() == true) {
-            return response()->json(["response" => "The user to whom you want to add a product doesn't exist"], 500);
+            return response()->json(["response" => "The user to whom you want to add a product doesn't exist"], 404);
         } else {
-            $sequenceNumber = self::getSequenceNumber($request['user_id']);
+            $itemId = self::getItemId($request['user_id']);
 
-            if (self::addToCart(['user_id' => $request['user_id'], 'seq_num' => $sequenceNumber, 'prod_id' => $request->get('prod_id')])) {
+            if (self::addToCart(['user_id' => $request['user_id'], 'item_id' => $itemId, 'prod_id' => $request->get('prod_id')])) {
                 return response()->json(["response" => "Successfully added to the cart"], 200);
             } else {
                 return response()->json(["response" => "Something went wrong while adding the product to the cart"], 500);
@@ -49,22 +160,138 @@ class CartController extends Controller
         }
     }
 
+    /**
+     * @OA\Get(
+     *      path="/cart/user/{user_id}/item/{item_id}",
+     *      summary="Get info about a product from the cart",
+     *      tags={"Cart"},
+     *      @OA\Parameter(
+     *          name="user_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Parameter(
+     *          name="item_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *     @OA\Response(
+     *          response=200,
+     *          description="Success",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  @OA\Property(
+     *                      property="item_id",
+     *                      type="integer"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="user_id",
+     *                      type="integer"
+     *                  ),
+     *                  @OA\Property(
+     *                      property="prod_id",
+     *                      type="integer"
+     *                  ),
+     *              ),
+     *          ),
+     *     ),
+     *     @OA\Response(
+     *          response="401",
+     *          description="Unauthorized user",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="array",
+     *                  @OA\Items(),
+     *              ),
+     *         ),
+     *      )
+     * )
+     */
+
     public function show(Request $request)
     {
         // return response()->json(["response" => [$request['id'], $request->get('user_id')]], 200);
         return response()->json(["response" => Redis::connection()->hGetAll("cart:{$request['user_id']}:items:{$request['item_id']}")], 200);
     }
 
+    /**
+     * @OA\Delete(
+     *      path="/cart/user/{user_id}/item/{item_id}",
+     *      summary="Remove a product from the cart",
+     *      tags={"Cart"},
+     *      @OA\Parameter(
+     *          name="user_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Parameter(
+     *          name="item_id",
+     *          description="",
+     *          required=true,
+     *          in="path",
+     *          @OA\Schema(
+     *              type="integer"
+     *          )
+     *      ),
+     *      @OA\Response(
+     *          response=200,
+     *          description="Success",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="string"
+     *              )
+     *          )
+     *     ),
+     *     @OA\Response(
+     *          response="401",
+     *          description="Unauthorized user",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="errors",
+     *                  type="array",
+     *                  @OA\Items(
+     *                  ),
+     *              ),
+     *         ),
+     *     ),
+     *     @OA\Response(
+     *          response="404",
+     *          description="Item doesn't exist",
+     *          @OA\JsonContent(
+     *              @OA\Property(
+     *                  property="response",
+     *                  type="string"
+     *              ),
+     *          ),
+     *      )
+     * )
+     */
+
     public function destroy(Request $request)
     {
         if (Redis::connection()->del("cart:{$request['user_id']}:items:{$request['item_id']}")) {
             return response()->json(["response" => "Successfully removed from the cart"], 200);
         } else {
-            return response()->json(["response" => "Something went wrong while removing the product from the cart"], 500);
+            return response()->json(["response" => "There is no this item in the cart"], 404);
         }
     }
 
-    private static function getSequenceNumber($userId) : int
+    private static function getItemId($userId) : int
     {
         if (!Redis::connection()->exists("cart:{$userId}:increment")) Redis::connection()->set("cart:{$userId}:increment", 0);
 
@@ -73,6 +300,6 @@ class CartController extends Controller
 
     private static function addToCart($data) : bool
     {
-        return Redis::connection()->hMSet("cart:{$data['user_id']}:items:{$data['seq_num']}", $data);
+        return Redis::connection()->hMSet("cart:{$data['user_id']}:items:{$data['item_id']}", $data);
     }
 }
