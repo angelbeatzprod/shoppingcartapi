@@ -16,15 +16,25 @@ use Illuminate\Routing\Controller as BaseController;
  *     title="Shopping cart API",
  *     version="1.0.0"
  *   ),
- *      @OA\SecurityScheme(
- *          securityDefinition="passport",
- *          type="oauth2",
- *          in="header",
- *          name="Authorization"
- *      ),
  * )
  */
 
+ /**
+ * @OA\SecurityScheme(
+ *     @OA\Flow(
+ *         flow="clientCredentials",
+ *         tokenUrl="/oauth/token",
+ *         scopes={}
+ *     ),
+ *     securityScheme="oauth2",
+ *     in="header",
+ *     type="oauth2",
+ *     description="Oauth2 security",
+ *     name="oauth2",
+ *     scheme="http",
+ *     bearerFormat="bearer",
+ * )
+ */
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;

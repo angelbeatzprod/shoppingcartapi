@@ -9,10 +9,10 @@ class ProductsController extends Controller
 {
     /**
      * @OA\Get(
-     *     path="/products",
+     *     path="/api/products",
      *     summary="Get list of products",
      *     tags={"Products"},
-     *     security={{"passport": {}}},
+     *      security={{"oauth2": {}}},
      *     @OA\Response(
      *          response=200,
      *          description="Success",
@@ -66,9 +66,10 @@ class ProductsController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/products",
+     *      path="/api/products",
      *      summary="Add a new product",
      *      tags={"Products"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="product_name",
      *          in="query",
@@ -133,9 +134,10 @@ class ProductsController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/products/{id}",
+     *      path="/api/products/{id}",
      *      summary="Get info about a product",
      *      tags={"Products"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="id",
      *          description="",
@@ -188,9 +190,10 @@ class ProductsController extends Controller
 
     /**
      * @OA\Put(
-     *      path="/products/{id}",
+     *      path="/api/products/{id}",
      *      summary="Update info of a product",
      *      tags={"Products"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="id",
      *          description="",
@@ -262,9 +265,10 @@ class ProductsController extends Controller
 
     /**
      * @OA\Delete(
-     *      path="/products/{id}",
+     *      path="/api/products/{id}",
      *      summary="Remove a product",
      *      tags={"Products"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="id",
      *          description="",

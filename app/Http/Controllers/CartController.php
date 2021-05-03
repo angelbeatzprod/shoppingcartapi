@@ -11,9 +11,10 @@ class CartController extends Controller
 {
     /**
      * @OA\Get(
-     *      path="/cart/user/{user_id}",
+     *      path="/api/cart/user/{user_id}",
      *      summary="Get list of products in the cart",
      *      tags={"Cart"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="user_id",
      *          description="",
@@ -76,9 +77,10 @@ class CartController extends Controller
 
     /**
      * @OA\Post(
-     *      path="/cart/user/{user_id}",
+     *      path="/api/cart/user/{user_id}",
      *      summary="Add a new product to the cart",
      *      tags={"Cart"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="user_id",
      *          description="",
@@ -162,9 +164,10 @@ class CartController extends Controller
 
     /**
      * @OA\Get(
-     *      path="/cart/user/{user_id}/item/{item_id}",
+     *      path="/api/cart/user/{user_id}/item/{item_id}",
      *      summary="Get info about a product from the cart",
      *      tags={"Cart"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="user_id",
      *          description="",
@@ -226,9 +229,10 @@ class CartController extends Controller
 
     /**
      * @OA\Delete(
-     *      path="/cart/user/{user_id}/item/{item_id}",
+     *      path="/api/cart/user/{user_id}/item/{item_id}",
      *      summary="Remove a product from the cart",
      *      tags={"Cart"},
+     *      security={{"oauth2": {}}},
      *      @OA\Parameter(
      *          name="user_id",
      *          description="",

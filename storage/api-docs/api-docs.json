@@ -5,7 +5,7 @@
         "version": "1.0.0"
     },
     "paths": {
-        "/cart/user/{user_id}": {
+        "/api/cart/user/{user_id}": {
             "get": {
                 "tags": [
                     "Cart"
@@ -69,7 +69,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             },
             "post": {
                 "tags": [
@@ -158,10 +163,15 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             }
         },
-        "/cart/user/{user_id}/item/{item_id}": {
+        "/api/cart/user/{user_id}/item/{item_id}": {
             "get": {
                 "tags": [
                     "Cart"
@@ -231,7 +241,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -306,10 +321,15 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             }
         },
-        "/products": {
+        "/api/products": {
             "get": {
                 "tags": [
                     "Products"
@@ -365,7 +385,7 @@
                 },
                 "security": [
                     {
-                        "passport": []
+                        "oauth2": []
                     }
                 ]
             },
@@ -440,10 +460,15 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             }
         },
-        "/products/{id}": {
+        "/api/products/{id}": {
             "get": {
                 "tags": [
                     "Products"
@@ -504,7 +529,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             },
             "put": {
                 "tags": [
@@ -586,7 +616,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             },
             "delete": {
                 "tags": [
@@ -652,7 +687,12 @@
                             }
                         }
                     }
-                }
+                },
+                "security": [
+                    {
+                        "oauth2": []
+                    }
+                ]
             }
         },
         "/api/user/signup": {
@@ -848,21 +888,31 @@
             }
         }
     },
+    "components": {
+        "securitySchemes": {
+            "oauth2": {
+                "type": "oauth2",
+                "description": "Oauth2 security",
+                "in": "header",
+                "flows": {
+                    "clientCredentials": {
+                        "tokenUrl": "/oauth/token",
+                        "scopes": {}
+                    }
+                },
+                "bearerFormat": "bearer",
+                "scheme": "http"
+            }
+        }
+    },
     "security": [
         {
             "passport": {
                 "type": "oauth2",
                 "description": "Laravel passport oauth2 security.",
-                "in": "header",
-                "scheme": "http",
-                "flows": {
-                    "password": {
-                        "authorizationUrl": "http://localhost/api/login",
-                        "tokenUrl": "http://localhost/oauth/token",
-                        "refreshUrl": "http://localhost/token/refresh",
-                        "scopes": []
-                    }
-                }
+                "flow": "password",
+                "tokenUrl": "http://localhost/oauth/token",
+                "scopes": []
             }
         }
     ]
